@@ -6,7 +6,7 @@ Create HDR images from LDR inputs:
 
 <img src="assets/examples.jpg">
 
-| (left) LDR input | (middle) HDR prediction exposures | (right) Tone mapped HDR |
+| (left) LDR input | (middle) Exposures taken from the predicted HDR | (right) Tone mapped HDR |
 </center>
 
 ---

@@ -15,7 +15,10 @@ Weights and code for:
 
 *ExpandNet: A Deep Convolutional Neural Network for High Dynamic Range Expansion from Low Dynamic Range Content*
 
-Demetris Marnerides, Thomas Bashford-Rogers, Jonathan Hatchett and Kurt Debattista
+[Demetris Marnerides](https://github.com/dmarnerides),
+[Thomas Bashford-Rogers](http://thomasbashfordrogers.com/),
+[Jonathan Hatchett](http://hatchett.me.uk/) 
+and [Kurt Debattista](https://warwick.ac.uk/fac/sci/wmg/people/profile/?wmgid=518)
 
 Paper will be presented at Eurographics 2018.
 

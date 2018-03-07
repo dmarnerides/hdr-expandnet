@@ -22,6 +22,8 @@ and [Kurt Debattista](https://warwick.ac.uk/fac/sci/wmg/people/profile/?wmgid=51
 
 Paper will be presented at Eurographics 2018.
 
+([arxiv version](https://arxiv.org/abs/1803.02266))
+
 ---
 
 ## Prerequisites

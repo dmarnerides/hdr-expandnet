@@ -91,4 +91,10 @@ Any tips to improve this are welcome!
 
 ---
 
+## Viewing HDR Images
+
+There is a very easy to use online viewer at [openhdr.org](https://viewer.openhdr.org/) which also has tone mapping functionalities!
+
+---
+
 Contact: dmarnerides@gmail.com

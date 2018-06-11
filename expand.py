@@ -134,8 +134,8 @@ class ExpandNet(nn.Module):
             v_input = Variable(t_input, volatile=True)
         v_input = torch.nn.functional.pad(v_input,(skip,skip,skip,skip))
         height, width = v_input.size(-2), v_input.size(-1)
-        num_h = int(np.ceil((height-skip)/(opt.patch_size-overlap)))
-        num_w = int(np.ceil((width-skip)/(opt.patch_size-overlap)))
+        num_h = int(np.ceil((result.size(-2)-skip)/(opt.patch_size-overlap)))
+        num_w = int(np.ceil((result.size(-1)-skip)/(opt.patch_size-overlap)))
         for h_index in range(num_h):
             for w_index in range(num_w):
                 h_start = h_index*(opt.patch_size-overlap)

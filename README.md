@@ -20,7 +20,7 @@ Weights and code for:
 [Jonathan Hatchett](http://hatchett.me.uk/) 
 and [Kurt Debattista](https://warwick.ac.uk/fac/sci/wmg/people/profile/?wmgid=518)
 
-Paper will be presented at Eurographics 2018.
+Paper was presented at Eurographics 2018.
 
 ([arxiv version](https://arxiv.org/abs/1803.02266))
 

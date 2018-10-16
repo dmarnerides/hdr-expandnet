@@ -133,15 +133,15 @@ class ExpandNet(nn.Module):
         else:
             v_input = Variable(t_input, volatile=True)
         v_input = torch.nn.functional.pad(v_input,(skip,skip,skip,skip))
-        height, width = v_input.size(-2), v_input.size(-1)
-        num_h = int(np.ceil((result.size(-2)-skip)/(opt.patch_size-overlap)))
-        num_w = int(np.ceil((result.size(-1)-skip)/(opt.patch_size-overlap)))
+        padded_height, padded_width = v_input.size(-2), v_input.size(-1)
+        num_h = int(np.ceil(padded_height/(opt.patch_size-overlap)))
+        num_w = int(np.ceil(padded_width/(opt.patch_size-overlap)))
         for h_index in range(num_h):
             for w_index in range(num_w):
                 h_start = h_index*(opt.patch_size-overlap)
                 w_start = w_index*(opt.patch_size-overlap)
-                h_end = min(h_start + opt.patch_size, height)
-                w_end = min(w_start + opt.patch_size, width)
+                h_end = min(h_start + opt.patch_size, padded_height)
+                w_end = min(w_start + opt.patch_size, padded_width)
                 v_input_slice = v_input[:,:,h_start:h_end, w_start:w_end]
                 loc = self.local_net(v_input_slice)
                 mid = self.mid_net(v_input_slice)
@@ -151,8 +151,8 @@ class ExpandNet(nn.Module):
                 # stitch
                 h_start_stitch = h_index*(opt.patch_size-overlap)
                 w_start_stitch = w_index*(opt.patch_size-overlap)
-                h_end_stitch = min(h_start + opt.patch_size-overlap, height)
-                w_end_stitch = min(w_start + opt.patch_size-overlap, width)
+                h_end_stitch = min(h_start + opt.patch_size-overlap, padded_height)
+                w_end_stitch = min(w_start + opt.patch_size-overlap, padded_width)
                 res_slice = res[:,:,skip:-skip, skip:-skip]
                 result[:,:,h_start_stitch:h_end_stitch, 
                            w_start_stitch:w_end_stitch].copy_(res_slice)

@@ -28,13 +28,14 @@ Paper was presented at Eurographics 2018.
 
 ## Prerequisites
 
-Requires the PyTorch library along with OpenCV.
+Requires the PyTorch library along with OpenCV. Best to use Python >= 3.6, but
+2.7 should work too now.
 
 First follow the [instructions for installing PyTorch](http://pytorch.org/).
 
 To install OpenCV use: 
 ```bash
-conda install opencv -c menpo
+conda install opencv3 -c menpo
 ```
 
 ---

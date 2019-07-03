@@ -5,7 +5,6 @@ import argparse
 import numpy as np
 import torch
 from torch import nn
-from torch.autograd import Variable
 import cv2
 from smooth import smoothen_luminance
 
@@ -103,62 +102,50 @@ class ExpandNet(nn.Module):
             nn.Sigmoid()
         )
     # This uses stitching is for low memory usage
-    def forward(self, t_input):
-        vrs = torch.__version__.split('.')
-        newer_version = False
-        if int(vrs[0])==0 and int(vrs[1]) > 3:
-            newer_version = True
-            torch.no_grad()
-        if t_input.dim() == 3:
-            t_input = t_input.unsqueeze(0)
-        if t_input.size(-3) == 1:
-            # For grey images
-            t_input = t_input.expand(1, 3, *t_input.size()[-2:])
-        # Evaluate global features
-        resized = cv2torch(cv2.resize(torch2cv(t_input.cpu()[0]), (256, 256)))
-        resized = resized.unsqueeze(0)
-        if opt.use_gpu:
-            resized = resized.cuda()
-        if newer_version:
-            v_input_resize = Variable(resized)
-        else:
-            v_input_resize = Variable(resized, volatile=True)
-        glob = self.glob_net(v_input_resize)
+    def predict(self, x):
+        with torch.no_grad():
+            if x.dim() == 3:
+                x = x.unsqueeze(0)
+            if x.size(-3) == 1:
+                # For grey images
+                x = x.expand(1, 3, *x.size()[-2:])
+            # Evaluate global features
+            resized = cv2torch(cv2.resize(torch2cv(x.cpu()[0]), (256, 256)))
+            resized = resized.unsqueeze(0)
+            if opt.use_gpu:
+                resized = resized.cuda()
+            glob = self.glob_net(resized)
 
-        overlap = 20 #
-        skip = int(overlap/2)
-        
-        result = t_input.clone()
-        if newer_version:
-            v_input = Variable(t_input)
-        else:
-            v_input = Variable(t_input, volatile=True)
-        v_input = torch.nn.functional.pad(v_input,(skip,skip,skip,skip))
-        padded_height, padded_width = v_input.size(-2), v_input.size(-1)
-        num_h = int(np.ceil(padded_height/(opt.patch_size-overlap)))
-        num_w = int(np.ceil(padded_width/(opt.patch_size-overlap)))
-        for h_index in range(num_h):
-            for w_index in range(num_w):
-                h_start = h_index*(opt.patch_size-overlap)
-                w_start = w_index*(opt.patch_size-overlap)
-                h_end = min(h_start + opt.patch_size, padded_height)
-                w_end = min(w_start + opt.patch_size, padded_width)
-                v_input_slice = v_input[:,:,h_start:h_end, w_start:w_end]
-                loc = self.local_net(v_input_slice)
-                mid = self.mid_net(v_input_slice)
-                exp_glob = glob.expand(1, 64, h_end-h_start, w_end-w_start)
-                fuse = torch.cat((loc, mid, exp_glob), 1)
-                res = self.end_net(fuse).data
-                # stitch
-                h_start_stitch = h_index*(opt.patch_size-overlap)
-                w_start_stitch = w_index*(opt.patch_size-overlap)
-                h_end_stitch = min(h_start + opt.patch_size-overlap, padded_height)
-                w_end_stitch = min(w_start + opt.patch_size-overlap, padded_width)
-                res_slice = res[:,:,skip:-skip, skip:-skip]
-                result[:,:,h_start_stitch:h_end_stitch, 
-                           w_start_stitch:w_end_stitch].copy_(res_slice)
-                del fuse, loc, mid, res
-        return result[0]
+            overlap = 20 #
+            skip = int(overlap/2)
+            
+            result = x.clone()
+            x = torch.nn.functional.pad(x,(skip,skip,skip,skip))
+            padded_height, padded_width = x.size(-2), x.size(-1)
+            num_h = int(np.ceil(padded_height/(opt.patch_size-overlap)))
+            num_w = int(np.ceil(padded_width/(opt.patch_size-overlap)))
+            for h_index in range(num_h):
+                for w_index in range(num_w):
+                    h_start = h_index*(opt.patch_size-overlap)
+                    w_start = w_index*(opt.patch_size-overlap)
+                    h_end = min(h_start + opt.patch_size, padded_height)
+                    w_end = min(w_start + opt.patch_size, padded_width)
+                    x_slice = x[:,:,h_start:h_end, w_start:w_end]
+                    loc = self.local_net(x_slice)
+                    mid = self.mid_net(x_slice)
+                    exp_glob = glob.expand(1, 64, h_end-h_start, w_end-w_start)
+                    fuse = torch.cat((loc, mid, exp_glob), 1)
+                    res = self.end_net(fuse).data
+                    # stitch
+                    h_start_stitch = h_index*(opt.patch_size-overlap)
+                    w_start_stitch = w_index*(opt.patch_size-overlap)
+                    h_end_stitch = min(h_start + opt.patch_size-overlap, padded_height)
+                    w_end_stitch = min(w_start + opt.patch_size-overlap, padded_width)
+                    res_slice = res[:,:,skip:-skip, skip:-skip]
+                    result[:,:,h_start_stitch:h_end_stitch, 
+                               w_start_stitch:w_end_stitch].copy_(res_slice)
+                    del fuse, loc, mid, res
+            return result[0]
 
 ## Parameters
 parser = argparse.ArgumentParser()
@@ -247,7 +234,7 @@ if opt.video:
         if opt.use_gpu:
             net.cuda()
             t_input = t_input.cuda()
-        predictions.append(torch2cv(net(t_input).cpu()))
+        predictions.append(torch2cv(net.predict(t_input).cpu()))
         percs = np.percentile(predictions[-1], (1,25, 50, 75, 99))
         lum_percs.append(percs)
     print()
@@ -284,7 +271,7 @@ else:
         if opt.use_gpu:
             net.cuda()
             t_input = t_input.cuda()
-        prediction = map_range(torch2cv(net(t_input).cpu()), 0, 1)
+        prediction = map_range(torch2cv(net.predict(t_input).cpu()), 0, 1)
 
         out_name = create_name(ldr_file, 'prediction', 'hdr', opt.out,
                                opt.tag)

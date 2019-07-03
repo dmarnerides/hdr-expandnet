@@ -5,6 +5,7 @@ import argparse
 import numpy as np
 import torch
 from torch import nn
+import torch.nn.functional as F
 import cv2
 from smooth import smoothen_luminance
 
@@ -101,6 +102,16 @@ class ExpandNet(nn.Module):
             nn.Conv2d(64, 3, 1, 1, 0),
             nn.Sigmoid()
         )
+    
+    def forward(self, x):
+        local = self.local_net(x)
+        mid = self.mid_net(x)
+        resized = F.interpolate(x, (256, 256), mode='bilinear')
+        b, c, h, w = local.shape
+        glob = self.glob_net(resized).expand(b, 64, h, w)
+        fuse = torch.cat((local, mid, glob), -3)
+        return self.end_net(fuse)
+
     # This uses stitching is for low memory usage
     def predict(self, x):
         with torch.no_grad():
@@ -110,17 +121,14 @@ class ExpandNet(nn.Module):
                 # For grey images
                 x = x.expand(1, 3, *x.size()[-2:])
             # Evaluate global features
-            resized = cv2torch(cv2.resize(torch2cv(x.cpu()[0]), (256, 256)))
-            resized = resized.unsqueeze(0)
-            if opt.use_gpu:
-                resized = resized.cuda()
+            resized = F.interpolate(x, (256, 256), mode='bilinear')
             glob = self.glob_net(resized)
 
             overlap = 20 #
             skip = int(overlap/2)
             
             result = x.clone()
-            x = torch.nn.functional.pad(x,(skip,skip,skip,skip))
+            x = F.pad(x,(skip,skip,skip,skip))
             padded_height, padded_width = x.size(-2), x.size(-1)
             num_h = int(np.ceil(padded_height/(opt.patch_size-overlap)))
             num_w = int(np.ceil(padded_width/(opt.patch_size-overlap)))

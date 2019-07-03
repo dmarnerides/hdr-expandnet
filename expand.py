@@ -40,10 +40,6 @@ def compose(transforms):
         return obj
     return composition
 
-def replace_specials_(x, val=0):
-    x[np.isinf(x).sum() | np.isnan(x).sum()] = val
-    return x
-
 def map_range(x, low=0, high=1):
     return np.interp(x, [x.min(), x.max()], [low, high]).astype(x.dtype)
     
@@ -186,8 +182,7 @@ net.eval()
 preprocess = compose([
     lambda x: x.astype('float32'),
     resize,
-    map_range,
-    replace_specials_])
+    map_range])
 
 class Exposure(object):
     def __init__(self, stops, gamma):

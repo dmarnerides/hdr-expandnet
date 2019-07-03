@@ -161,6 +161,7 @@ arg('--video', type=str2bool, default=False, help='Whether input is a video.')
 arg('--patch_size', type=int, default=256,
     help='Patch size (to limit memory use).')
 arg('--resize', type=str2bool, default=False, help='Use resized input.')
+arg('--use_exr', type=str2bool, default=False, help='Produce .EXR instead of .HDR files.')
 arg('--width', type=int, default=960, help='Image width resizing.')
 arg('--height', type=int, default=540, help='Image height resizing.')
 arg('--tag', default=None, help='Tag for outputs.')
@@ -276,12 +277,13 @@ else:
             t_input = t_input.cuda()
         prediction = map_range(torch2cv(net.predict(t_input).cpu()), 0, 1)
 
-        out_name = create_name(ldr_file, 'prediction', 'hdr', opt.out,
+        extension = 'exr' if opt.use_exr else 'hdr'
+        out_name = create_name(ldr_file, 'prediction', extension, opt.out,
                                opt.tag)
         cv2.imwrite(out_name, prediction)
         if opt.tone_map is not None:
             tmo_img = tone_map(prediction, opt.tone_map)
-            out_name = create_name(ldr_file, 
+            out_name = create_name(ldr_file,
                                    'prediction_{0}'.format(opt.tone_map),
                                    'jpg', opt.out, opt.tag)
             cv2.imwrite(out_name, (tmo_img*255).astype(int))

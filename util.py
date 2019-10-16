@@ -27,13 +27,13 @@ def split_path(directory):
 # From torchnet
 # https://github.com/pytorch/tnt/blob/master/torchnet/transform.py
 def compose(transforms):
-    "Composes list of transforms (each accept and return one item)"
+    'Composes list of transforms (each accept and return one item)'
     assert isinstance(transforms, list)
     for transform in transforms:
-        assert callable(transform), "list of functions expected"
+        assert callable(transform), 'list of functions expected'
 
     def composition(obj):
-        "Composite function"
+        'Composite function'
         for transform in transforms:
             obj = transform(obj)
         return obj
@@ -71,7 +71,7 @@ class Exposure(object):
         self.gamma = gamma
 
     def process(self, img):
-        return np.clip(img * (2**self.stops), 0, 1)**self.gamma
+        return np.clip(img * (2 ** self.stops), 0, 1) ** self.gamma
 
 
 class PercentileExposure(object):
@@ -86,7 +86,7 @@ class PercentileExposure(object):
 
     def __call__(self, x):
         low, high = np.percentile(x, (self.low_perc, self.high_perc))
-        return map_range(np.clip(x, low, high))**(1 / self.gamma)
+        return map_range(np.clip(x, low, high)) ** (1 / self.gamma)
 
 
 class BaseTMO(object):
@@ -95,12 +95,14 @@ class BaseTMO(object):
 
 
 class Reinhard(BaseTMO):
-    def __init__(self,
-                 intensity=-1.0,
-                 light_adapt=0.8,
-                 color_adapt=0.0,
-                 gamma=2.0,
-                 randomize=False):
+    def __init__(
+        self,
+        intensity=-1.0,
+        light_adapt=0.8,
+        color_adapt=0.0,
+        gamma=2.0,
+        randomize=False,
+    ):
         if randomize:
             gamma = uniform(1.8, 2.2)
             intensity = uniform(-1.0, 1.0)
@@ -110,7 +112,8 @@ class Reinhard(BaseTMO):
             gamma=gamma,
             intensity=intensity,
             light_adapt=light_adapt,
-            color_adapt=color_adapt)
+            color_adapt=color_adapt,
+        )
 
 
 class Mantiuk(BaseTMO):
@@ -120,7 +123,8 @@ class Mantiuk(BaseTMO):
             scale = uniform(0.65, 0.85)
 
         self.op = cv2.createTonemapMantiuk(
-            saturation=saturation, scale=scale, gamma=gamma)
+            saturation=saturation, scale=scale, gamma=gamma
+        )
 
 
 class Drago(BaseTMO):
@@ -130,17 +134,20 @@ class Drago(BaseTMO):
             bias = uniform(0.7, 0.9)
 
         self.op = cv2.createTonemapDrago(
-            saturation=saturation, bias=bias, gamma=gamma)
+            saturation=saturation, bias=bias, gamma=gamma
+        )
 
 
 class Durand(BaseTMO):
-    def __init__(self,
-                 contrast=3,
-                 saturation=1.0,
-                 sigma_space=8,
-                 sigma_color=0.4,
-                 gamma=2.0,
-                 randomize=False):
+    def __init__(
+        self,
+        contrast=3,
+        saturation=1.0,
+        sigma_space=8,
+        sigma_color=0.4,
+        gamma=2.0,
+        randomize=False,
+    ):
         if randomize:
             gamma = uniform(1.8, 2.2)
             contrast = uniform(3.5)
@@ -149,7 +156,8 @@ class Durand(BaseTMO):
             saturation=saturation,
             sigma_space=sigma_space,
             sigma_color=sigma_color,
-            gamma=gamma)
+            gamma=gamma,
+        )
 
 
 TMO_DICT = {
@@ -157,7 +165,7 @@ TMO_DICT = {
     'reinhard': Reinhard,
     'mantiuk': Mantiuk,
     'drago': Drago,
-    'durand': Durand
+    'durand': Durand,
 }
 
 
@@ -170,7 +178,7 @@ TRAIN_TMO_DICT = {
     'reinhard': Reinhard,
     'mantiuk': Mantiuk,
     'drago': Drago,
-    'durand': Durand
+    'durand': Durand,
 }
 
 
@@ -208,12 +216,14 @@ def exponential_size(val):
 
 
 # Accepts hwc-bgr image
-def index_gauss(img,
-                precision=None,
-                crop_size=None,
-                random_size=True,
-                ratio=None,
-                seed=None):
+def index_gauss(
+    img,
+    precision=None,
+    crop_size=None,
+    random_size=True,
+    ratio=None,
+    seed=None,
+):
     """Returns indices (Numpy slice) of an image crop sampled spatially using a gaussian distribution.
 
     Args:
@@ -238,28 +248,30 @@ def index_gauss(img,
 
     """
     np.random.seed(seed)
-    dims = {"w": img.shape[1], "h": img.shape[0]}
+    dims = {'w': img.shape[1], 'h': img.shape[0]}
     if precision is None:
-        precision = {"w": 1, "h": 4}
+        precision = {'w': 1, 'h': 4}
     else:
-        precision = {"w": precision[0], "h": precision[1]}
+        precision = {'w': precision[0], 'h': precision[1]}
 
     if crop_size is None:
         crop_size = {key: int(dims[key] / 4) for key in dims}
     else:
-        crop_size = {"w": crop_size[0], "h": crop_size[1]}
+        crop_size = {'w': crop_size[0], 'h': crop_size[1]}
 
     if ratio is not None:
         ratio = max(ratio, 1e-4)
         if ratio > 1:
             if random_size:
                 crop_size['h'] = int(
-                    max(crop_size['h'], exponential_size(dims['h'])))
+                    max(crop_size['h'], exponential_size(dims['h']))
+                )
             crop_size['w'] = int(np.round(crop_size['h'] * ratio))
         else:
             if random_size:
                 crop_size['w'] = int(
-                    max(crop_size['w'], exponential_size(dims['w'])))
+                    max(crop_size['w'], exponential_size(dims['w']))
+                )
             crop_size['h'] = int(np.round(crop_size['w'] / ratio))
     else:
         if random_size:
@@ -270,9 +282,13 @@ def index_gauss(img,
 
     centers = {
         key: int(
-            clamped_gaussian(dim / 2, crop_size[key] / precision[key],
-                             min(int(crop_size[key] / 2), dim),
-                             max(int(dim - crop_size[key] / 2), 0)))
+            clamped_gaussian(
+                dim / 2,
+                crop_size[key] / precision[key],
+                min(int(crop_size[key] / 2), dim),
+                max(int(dim - crop_size[key] / 2), 0),
+            )
+        )
         for key, dim in dims.items()
     }
     starts = {
@@ -280,44 +296,51 @@ def index_gauss(img,
         for key, center in centers.items()
     }
     ends = {key: start + crop_size[key] for key, start in starts.items()}
-    return np.s_[starts["h"]:ends["h"], starts["w"]:ends["w"], :]
+    return np.s_[starts['h'] : ends['h'], starts['w'] : ends[' w '], :]
 
 
-def slice_gauss(img,
-                precision=None,
-                crop_size=None,
-                random_size=True,
-                ratio=None,
-                seed=None):
+def slice_gauss(
+    img,
+    precision=None,
+    crop_size=None,
+    random_size=True,
+    ratio=None,
+    seed=None,
+):
     """Returns a cropped sample from an image array using :func:`index_gauss`"""
     return img[index_gauss(img, precision, crop_size, random_size, ratio)]
 
 
 class DirectoryDataset(Dataset):
-    def __init__(self,
-                 data_root_path='hdr_data',
-                 data_extensions=['.hdr', '.exr'],
-                 load_fn=None,
-                 preprocess=None):
+    def __init__(
+        self,
+        data_root_path='hdr_data',
+        data_extensions=['.hdr', '.exr'],
+        load_fn=None,
+        preprocess=None,
+    ):
         super(DirectoryDataset, self).__init__()
         data_root_path = process_path(data_root_path)
         self.file_list = []
         for root, _, fnames in sorted(os.walk(data_root_path)):
             for fname in fnames:
-                if any(fname.lower().endswith(extension)
-                       for extension in data_extensions):
+                if any(
+                    fname.lower().endswith(extension)
+                    for extension in data_extensions
+                ):
                     self.file_list.append(os.path.join(root, fname))
         if len(self.file_list) == 0:
             msg = 'Could not find any files with extensions:\n[{0}]\nin\n{1}'
             raise RuntimeError(
-                msg.format(', '.join(data_extensions), data_root_path))
+                msg.format(', '.join(data_extensions), data_root_path)
+            )
 
         self.preprocess = preprocess
 
     def __getitem__(self, index):
         dpoint = cv2.imread(
-            self.file_list[index],
-            flags=cv2.IMREAD_ANYDEPTH + cv2.IMREAD_COLOR)
+            self.file_list[index], flags=cv2.IMREAD_ANYDEPTH + cv2.IMREAD_COLOR
+        )
         if self.preprocess is not None:
             dpoint = self.preprocess(dpoint)
         return dpoint

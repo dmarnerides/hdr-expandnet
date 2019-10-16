@@ -3,6 +3,7 @@
 *.exr
 checkpoints/
 test.jpg
+tags
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

@@ -37,6 +37,9 @@ To install OpenCV use:
 conda install opencv3 -c menpo
 ```
 
+**NOTE** There might be training issues when using latest versions of OpenCV
+for the tone mapping operators (issue #14)
+
 ---
 
 ## Usage
